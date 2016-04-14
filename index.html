@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Nginx-php-mysql-setup by akshaykhale1992</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Nginx-php-mysql-setup</h1>
+      <h2 class="project-tagline">Setting Up Nginx, PHP, Composer and Mysql on a Linux system</h2>
+      <a href="https://github.com/akshaykhale1992/nginx-php-mysql-setup" class="btn">View on GitHub</a>
+      <a href="https://github.com/akshaykhale1992/nginx-php-mysql-setup/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/akshaykhale1992/nginx-php-mysql-setup/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="setup-linux-server-with-nginx-php-and-mysql" class="anchor" href="#setup-linux-server-with-nginx-php-and-mysql" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setup Linux Server with Nginx, PHP and Mysql</h1>
+
+<h2>
+<a id="seting-up-components" class="anchor" href="#seting-up-components" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Seting up Components</h2>
+
+<p>First, we need to update our local package index to make sure we have a fresh list of the available packages. Then we can install the necessary components:</p>
+
+<pre><code>sudo apt-get update
+sudo apt-get install nginx php5-fpm php5-cli php5-mcrypt git
+</code></pre>
+
+<p>This will install Nginx as our web server along with the necessary PHP tools. We also install git because the composer tool, the dependency manager for PHP, will use it to pull down packages.</p>
+
+<p>If you want to configure PHP then you can edit <em>php.ini</em> file and change configuration settings for that execute following statements</p>
+
+<pre><code>sudo vim /etc/php5/fpm/php.ini
+</code></pre>
+
+<h2>
+<a id="configuring-nginx-server-root-directory-and-default-document" class="anchor" href="#configuring-nginx-server-root-directory-and-default-document" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuring Nginx Server root directory and default document</h2>
+
+<p>The next item that we should address is the web server. This will involve following two steps.</p>
+
+<p>First create the folder where your website will be hosted(root directory)</p>
+
+<pre><code>sudo mkdir -p /var/www/vhosts/example.com
+</code></pre>
+
+<p>Now we need to set <em>/var/www/vhosts/example.com</em> as root directory of <strong>Nginx</strong> web server for that we need to edit default Nginx Configuration file located at <em>/etc/nginx/sites-available/default</em>.</p>
+
+<pre><code>sudo nano /etc/nginx/sites-available/default
+</code></pre>
+
+<p>Default Configuration file
+    server {
+        listen 80 default_server;
+        listen [::]:80 default_server ipv6only=on;</p>
+
+<pre><code>    root /usr/share/nginx/html;
+    index index.html index.htm;
+
+    server_name localhost;
+
+    location / {
+            try_files $uri $uri/ =404;
+    }
+}
+</code></pre>
+
+<p>Now we need to </p>
+
+<ul>
+<li>Change the root directory from <em>/usr/share/nginx/html</em> to root directory of our project Eg. <em>/var/www/vhosts/example.com</em>.</li>
+<li>Add index.php to default document list.</li>
+<li>Add static IP or Domain Name instead of Localhost in server Name</li>
+</ul>
+
+<p>For thatc just change the Nginx default configuration file to following file.</p>
+
+<pre><code>server {
+    listen 80 default_server;
+    listen [::]:80 default_server ipv6only=on;
+
+    root /var/www/vhosts/example.com;
+    index index.php index.html index.htm;
+
+    server_name &lt;Static IP Address or Domain Name&gt;;
+
+    location / {
+            try_files $uri $uri/ =404;
+    }
+}
+</code></pre>
+
+<h2>
+<a id="setup-nginx-to-execute-php-scripts" class="anchor" href="#setup-nginx-to-execute-php-scripts" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setup Nginx to execute PHP scripts</h2>
+
+<p>For this again we need to open <strong>Nginx</strong> Default Configuration file and add following block into it right before closing of server block</p>
+
+<pre><code>location ~ \.php$ {
+    try_files $uri /index.php =404;
+    fastcgi_split_path_info ^(.+\.php)(/.+)$;
+    fastcgi_pass unix:/var/run/php5-fpm.sock;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    include fastcgi_params;
+}
+</code></pre>
+
+<p>After saving finally configuration file should look like this</p>
+
+<pre><code>server {
+    listen 80 default_server;
+    listen [::]:80 default_server ipv6only=on;
+
+    root /var/www/vhosts/example.com;
+    index index.php index.html index.htm;
+
+    server_name &lt;Static IP Address or Domain Name&gt;;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        try_files $uri /index.php =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}
+</code></pre>
+
+<p>After saving the configuration file we just need to restart Nginx</p>
+
+<pre><code>sudo service nginx restart
+</code></pre>
+
+<h2>
+<a id="setting-up-composer" class="anchor" href="#setting-up-composer" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setting up Composer</h2>
+
+<p>Composer is the most popular dependency manager for php projects and to setup composer we just need to execute following commands.</p>
+
+<pre><code>cd ~
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+</code></pre>
+
+<h2>
+<a id="installing-up-mysql" class="anchor" href="#installing-up-mysql" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installing up Mysql</h2>
+
+<p>Mysql is the most common and popular database server used with PHP and to setup mysql databse you just need to execute</p>
+
+<pre><code>sudo apt-get update
+sudo apt-get install mysql-server
+</code></pre>
+
+<p>This will prompt you for mysql root(admin) password too.</p>
+
+<h2>
+<a id="updating-and-verifying-mysql-server" class="anchor" href="#updating-and-verifying-mysql-server" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Updating and verifying Mysql Server</h2>
+
+<pre><code>sudo mysql_secure_installation
+</code></pre>
+
+<p>Above command will prompt you and can be used to remove default created users and test databases that came right out of the box along with mysql installation.</p>
+
+<p>to test mysql installation try executing </p>
+
+<pre><code>service mysql status
+</code></pre>
+
+<p>If above command gives an error then just start mysql service with command</p>
+
+<pre><code>sudo service mysql start
+</code></pre>
+
+<h2>
+<a id="securing-mysql" class="anchor" href="#securing-mysql" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Securing Mysql</h2>
+
+<p>Database is the crucial part of a website which needs to be secure for that you may consider following guidelines(optional)</p>
+
+<p><strong>Renaming root username</strong></p>
+
+<p>Root is the database administrator account which has all the privileges so it make sense to chage root credentials after installation(especially username).</p>
+
+<p>for that execute following command</p>
+
+<pre><code>mysql -u root -p 
+&lt;Enter mysql Password&gt;
+mysql&gt; rename user 'root'@'localhost' to '&lt;new_username&gt;'@'localhost';
+</code></pre>
+
+<p><strong>Creating New user with limited Database Access and limited privileges</strong></p>
+
+<pre><code>mysql -u root -p
+&lt;Enter mysql password&gt;
+mysql&gt; GRANT SELECT,UPDATE,DELETE ON &lt;database_name&gt;.* TO '&lt;new_user&gt;'@'localhost';
+</code></pre>
+
+<p>After completing all the steps mentioned above your webserver will be ready with Nginx, PHP, Composer and Mysql</p>
+
+<p>But In some cases you might get Mysql Connection Exception saying mysql driver not found for that just execute following command</p>
+
+<pre><code>sudo apt-get install php5-mysql
+</code></pre>
+
+<p>And you are done...</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/akshaykhale1992/nginx-php-mysql-setup">Nginx-php-mysql-setup</a> is maintained by <a href="https://github.com/akshaykhale1992">akshaykhale1992</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
