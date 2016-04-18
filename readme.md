@@ -1,4 +1,4 @@
-# Setup Linux Server with Nginx, PHP and Mysql
+# Setup Ubuntu Linux Server with Nginx, PHP and Mysql
 
 ## Seting up Components
 First, we need to update our local package index to make sure we have a fresh list of the available packages. Then we can install the necessary components:
