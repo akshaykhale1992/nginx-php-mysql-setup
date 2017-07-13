@@ -154,7 +154,7 @@ After completing all the steps mentioned above your webserver will be ready with
 
 But In some cases you might get Mysql Connection Exception saying mysql driver not found for that just execute following command
 
-    sudo apt-get install php5-mysql
+    sudo apt-get install php7.0-mysql
     
 And you are done...
 
