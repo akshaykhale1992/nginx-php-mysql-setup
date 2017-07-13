@@ -4,7 +4,7 @@
 First, we need to update our local package index to make sure we have a fresh list of the available packages. Then we can install the necessary components:
 
     sudo apt-get update
-    sudo apt-get install nginx php5-fpm php5-cli php5-mcrypt git
+    sudo apt-get install nginx php7.0-fpm php7.0-cli php7.0-mcrypt git
 
 This will install Nginx as our web server along with the necessary PHP tools. We also install git because the composer tool, the dependency manager for PHP, will use it to pull down packages.
 
