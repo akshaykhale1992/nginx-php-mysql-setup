@@ -10,7 +10,7 @@ This will install Nginx as our web server along with the necessary PHP tools. We
 
 If you want to configure PHP then you can edit _php.ini_ file and change configuration settings for that execute following statements
 
-    sudo vim /etc/php5/fpm/php.ini
+    sudo vim /etc/php/7.0/fpm/php.ini
     
 ## Configuring Nginx Server root directory and default document
 The next item that we should address is the web server. This will involve following two steps.
